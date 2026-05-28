@@ -170,6 +170,26 @@ input {
   background: #edf0f4;
 }
 
+.photo-image-button {
+  width: 100%;
+  display: block;
+  padding: 0;
+  min-height: 0;
+  border-radius: 0;
+  background: transparent;
+  line-height: 0;
+}
+
+.photo-image-button:disabled {
+  opacity: 1;
+}
+
+.photo-image-button:not(:disabled):focus-visible,
+.photo-image-button:not(:disabled):hover {
+  outline: 3px solid #f4b860;
+  outline-offset: -3px;
+}
+
 .photo-body {
   padding: 14px;
 }
@@ -266,6 +286,21 @@ input {
 
 .hidden {
   display: none;
+}
+
+.status {
+  min-height: 24px;
+  margin-top: 12px;
+}
+
+.status.error {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.status.success {
+  color: #0f766e;
+  font-weight: 700;
 }
 
 @media (max-width: 760px) {
