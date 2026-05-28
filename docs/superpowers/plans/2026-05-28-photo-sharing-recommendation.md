@@ -2,376 +2,330 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a GitHub Pages-ready React app backed by Supabase where guests upload optimized photos, anonymously recommend up to three photos, and admins manage uploads in real time.
+**Goal:** Build a GitHub Pages-ready static app backed by Supabase where guests upload optimized photos, anonymously recommend up to three photos, and admins manage uploads in real time.
 
-**Architecture:** The frontend is a Vite React single-page app with route-based guest and admin screens. Supabase Postgres stores photo and recommendation metadata, Supabase Storage stores public optimized images, Realtime keeps guest/admin views fresh, and Edge Functions protect privileged admin deletes behind a shared password secret.
+**Architecture:** The frontend is a dependency-light static HTML/CSS/ES Modules app with a guest page and `/admin/` page. Supabase Postgres stores photo and recommendation metadata, Supabase Storage stores public optimized images, Realtime keeps guest/admin views fresh, and Edge Functions protect privileged admin deletes behind a shared password secret.
 
-**Tech Stack:** Vite, React, TypeScript, Vitest, React Testing Library, Supabase JS, Supabase SQL migrations, Supabase Edge Functions.
+**Tech Stack:** HTML, CSS, browser ES Modules, Node's built-in test runner, Supabase JS from CDN, Supabase SQL migrations, Supabase Edge Functions.
 
 ---
 
 ## File Structure
 
-- `package.json`: npm scripts and dependencies.
-- `vite.config.ts`: Vite, React, Vitest, and GitHub Pages base config.
-- `index.html`: static app shell.
-- `src/main.tsx`: React bootstrap.
-- `src/App.tsx`: hash route switch for `/` and `/admin` on GitHub Pages.
-- `src/lib/env.ts`: required Supabase environment variable validation.
-- `src/lib/supabase.ts`: Supabase browser client.
-- `src/lib/visitor.ts`: anonymous visitor ID and local recommendation state helpers.
-- `src/lib/imageOptimizer.ts`: browser image resize/compression under 5MB.
-- `src/lib/photos.ts`: photo upload, list, realtime subscription, recommendation RPC calls.
-- `src/components/UploadForm.tsx`: nickname/photo upload form.
-- `src/components/Gallery.tsx`: SNS-style guest gallery and recommendation buttons.
-- `src/pages/HomePage.tsx`: guest page composition.
-- `src/pages/AdminPage.tsx`: password-protected admin dashboard.
-- `src/styles.css`: responsive app styling.
-- `src/**/*.test.ts` and `src/**/*.test.tsx`: unit/component tests.
+- `package.json`: Node test and static verification scripts.
+- `index.html`: guest upload and gallery page.
+- `admin/index.html`: password-protected administrator dashboard page.
+- `app/config.js`: public Supabase configuration.
+- `app/supabaseClient.js`: Supabase browser client loaded from CDN.
+- `app/visitor.js`: anonymous visitor ID and local recommendation state helpers.
+- `app/imageOptimizer.js`: browser image resize/compression under 5MB.
+- `app/photos.js`: photo upload, list, realtime subscription, recommendation RPC calls.
+- `app/main.js`: guest page controller.
+- `app/admin.js`: admin page controller.
+- `app/styles.css`: responsive app styling.
+- `tests/*.test.js`: Node built-in unit tests for pure helpers.
+- `scripts/verify-static.js`: checks required static assets before deploy.
 - `supabase/migrations/20260528000000_photo_gallery.sql`: schema, RLS, grants, RPC, storage bucket/policies.
 - `supabase/functions/admin-photos/index.ts`: admin list/delete/delete-all Edge Function.
-- `.env.example`: required frontend env vars.
-- `.github/workflows/deploy.yml`: GitHub Pages build/deploy workflow.
-- `README.md`: setup, Supabase deploy, GitHub Pages deploy, and admin secret instructions.
+- `.github/workflows/deploy.yml`: GitHub Pages deploy workflow.
+- `README.md`: setup, Supabase deploy, admin secret, GitHub Pages, and QR URL instructions.
 
-### Task 1: Project Scaffold and Environment
+### Task 1: Static Scaffold and Environment
 
 **Files:**
 - Create: `package.json`
-- Create: `vite.config.ts`
-- Create: `tsconfig.json`
-- Create: `tsconfig.node.json`
 - Create: `index.html`
-- Create: `src/main.tsx`
-- Create: `src/App.tsx`
-- Create: `src/lib/env.ts`
-- Create: `.env.example`
+- Create: `admin/index.html`
+- Create: `app/config.js`
+- Create: `app/styles.css`
+- Create: `tests/config.test.js`
 
-- [ ] **Step 1: Write failing env validation tests**
+- [ ] **Step 1: Write the failing config test**
 
-```ts
-import { describe, expect, test } from 'vitest';
-import { readSupabaseEnv } from './env';
+```js
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readSupabaseConfig } from '../app/config.js';
 
-describe('readSupabaseEnv', () => {
-  test('returns configured Supabase values', () => {
-    expect(readSupabaseEnv({
-      VITE_SUPABASE_URL: 'https://example.supabase.co',
-      VITE_SUPABASE_ANON_KEY: 'public-key',
-    })).toEqual({
-      url: 'https://example.supabase.co',
-      anonKey: 'public-key',
-    });
-  });
+test('readSupabaseConfig returns configured values', () => {
+  assert.deepEqual(
+    readSupabaseConfig({
+      supabaseUrl: 'https://example.supabase.co',
+      supabaseAnonKey: 'public-key',
+    }),
+    {
+      supabaseUrl: 'https://example.supabase.co',
+      supabaseAnonKey: 'public-key',
+      bucketName: 'event-photos',
+      adminFunctionName: 'admin-photos',
+      maxRecommendations: 3,
+    },
+  );
+});
 
-  test('throws when required values are missing', () => {
-    expect(() => readSupabaseEnv({})).toThrow('VITE_SUPABASE_URL');
-  });
+test('readSupabaseConfig throws when required values are missing', () => {
+  assert.throws(() => readSupabaseConfig({}), /Supabase URL/);
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- src/lib/env.test.ts`
+Run: `node --test tests/config.test.js`
 
-Expected: FAIL because the project and `readSupabaseEnv` do not exist yet.
+Expected: FAIL because `readSupabaseConfig` does not exist yet.
 
-- [ ] **Step 3: Create the Vite app scaffold and env helper**
+- [ ] **Step 3: Create static shell and config helper**
 
-Implement the files listed above with React, TypeScript, Vitest, and a minimal route shell.
+Implement `package.json`, guest/admin HTML shells, base CSS, and `readSupabaseConfig`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npm test -- src/lib/env.test.ts`
+Run: `node --test tests/config.test.js`
 
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
-Run: `git add . && git commit -m "chore: scaffold photo gallery app"`
+Run: `git add . && git commit -m "chore: scaffold static photo gallery app"`
 
-### Task 2: Anonymous Visitor and Recommendation Limit Helpers
+### Task 2: Anonymous Visitor Helpers
 
 **Files:**
-- Create: `src/lib/visitor.ts`
-- Test: `src/lib/visitor.test.ts`
+- Create: `app/visitor.js`
+- Create: `tests/visitor.test.js`
 
 - [ ] **Step 1: Write failing visitor tests**
 
-```ts
-import { describe, expect, test, beforeEach } from 'vitest';
+```js
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
+  canRecommendMore,
   getOrCreateVisitorId,
   getRecommendedPhotoIds,
   rememberRecommendedPhoto,
-  canRecommendMore,
-} from './visitor';
+} from '../app/visitor.js';
 
-beforeEach(() => localStorage.clear());
+function memoryStorage() {
+  const data = new Map();
+  return {
+    getItem: (key) => data.get(key) ?? null,
+    setItem: (key, value) => data.set(key, value),
+  };
+}
 
-describe('visitor recommendation helpers', () => {
-  test('persists one anonymous visitor id', () => {
-    const first = getOrCreateVisitorId();
-    const second = getOrCreateVisitorId();
-    expect(first).toMatch(/^visitor_/);
-    expect(second).toBe(first);
-  });
+test('persists one anonymous visitor id', () => {
+  const storage = memoryStorage();
+  const first = getOrCreateVisitorId(storage);
+  const second = getOrCreateVisitorId(storage);
+  assert.match(first, /^visitor_/);
+  assert.equal(second, first);
+});
 
-  test('tracks recommended photo ids and enforces a total limit of three', () => {
-    rememberRecommendedPhoto('a');
-    rememberRecommendedPhoto('b');
-    rememberRecommendedPhoto('c');
-    expect(getRecommendedPhotoIds()).toEqual(['a', 'b', 'c']);
-    expect(canRecommendMore()).toBe(false);
-  });
+test('tracks unique recommendations and enforces a total limit of three', () => {
+  const storage = memoryStorage();
+  rememberRecommendedPhoto('a', storage);
+  rememberRecommendedPhoto('b', storage);
+  rememberRecommendedPhoto('b', storage);
+  rememberRecommendedPhoto('c', storage);
+  assert.deepEqual(getRecommendedPhotoIds(storage), ['a', 'b', 'c']);
+  assert.equal(canRecommendMore(storage), false);
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- src/lib/visitor.test.ts`
+Run: `node --test tests/visitor.test.js`
 
-Expected: FAIL because helpers are not implemented.
+Expected: FAIL because `app/visitor.js` does not exist.
 
-- [ ] **Step 3: Implement local storage helpers**
+- [ ] **Step 3: Implement visitor helpers**
 
-Implement stable visitor ID generation, unique recommended photo tracking, and the three-recommendation limit.
+Implement stable visitor ID generation, unique local recommendation tracking, and the three-recommendation limit.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npm test -- src/lib/visitor.test.ts`
+Run: `node --test tests/visitor.test.js`
 
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
-Run: `git add src/lib/visitor.ts src/lib/visitor.test.ts && git commit -m "feat: track anonymous recommendations"`
+Run: `git add app/visitor.js tests/visitor.test.js && git commit -m "feat: track anonymous recommendations"`
 
-### Task 3: Image Optimization
+### Task 3: Image Optimization Helpers
 
 **Files:**
-- Create: `src/lib/imageOptimizer.ts`
-- Test: `src/lib/imageOptimizer.test.ts`
+- Create: `app/imageOptimizer.js`
+- Create: `tests/imageOptimizer.test.js`
 
 - [ ] **Step 1: Write failing optimizer tests**
 
-```ts
-import { describe, expect, test } from 'vitest';
-import { isSupportedImageType, ensureUploadSize } from './imageOptimizer';
+```js
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { ensureUploadSize, getOptimizedFileName, isSupportedImageType } from '../app/imageOptimizer.js';
 
-describe('image optimizer helpers', () => {
-  test('accepts common browser image types', () => {
-    expect(isSupportedImageType('image/jpeg')).toBe(true);
-    expect(isSupportedImageType('image/png')).toBe(true);
-    expect(isSupportedImageType('image/webp')).toBe(true);
-    expect(isSupportedImageType('image/gif')).toBe(false);
-  });
+test('accepts common browser image types', () => {
+  assert.equal(isSupportedImageType('image/jpeg'), true);
+  assert.equal(isSupportedImageType('image/png'), true);
+  assert.equal(isSupportedImageType('image/webp'), true);
+  assert.equal(isSupportedImageType('image/gif'), false);
+});
 
-  test('rejects blobs above the configured upload limit', () => {
-    const largeBlob = new Blob([new Uint8Array(5 * 1024 * 1024 + 1)], { type: 'image/jpeg' });
-    expect(() => ensureUploadSize(largeBlob)).toThrow('5MB');
-  });
+test('rejects blobs above the upload limit', () => {
+  const largeBlob = new Blob([new Uint8Array(5 * 1024 * 1024 + 1)], { type: 'image/jpeg' });
+  assert.throws(() => ensureUploadSize(largeBlob), /5MB/);
+});
+
+test('creates safe optimized filenames', () => {
+  assert.equal(getOptimizedFileName('My Photo 01.PNG', 'image/webp'), 'my-photo-01.webp');
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- src/lib/imageOptimizer.test.ts`
+Run: `node --test tests/imageOptimizer.test.js`
 
-Expected: FAIL because helpers are not implemented.
+Expected: FAIL because `app/imageOptimizer.js` does not exist.
 
 - [ ] **Step 3: Implement validation and browser canvas optimization**
 
-Implement type validation, upload-size validation, and `optimizeImage(file)` that resizes via canvas and retries lower JPEG/WebP quality until the blob is at most 5MB.
+Implement type validation, upload-size validation, safe output filenames, and `optimizeImage(file)` using canvas with quality retries until the blob is at most 5MB.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npm test -- src/lib/imageOptimizer.test.ts`
+Run: `node --test tests/imageOptimizer.test.js`
 
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
-Run: `git add src/lib/imageOptimizer.ts src/lib/imageOptimizer.test.ts && git commit -m "feat: optimize uploaded images"`
+Run: `git add app/imageOptimizer.js tests/imageOptimizer.test.js && git commit -m "feat: optimize uploaded images"`
 
-### Task 4: Supabase Schema and API Wrappers
+### Task 4: Supabase Schema and Photo API
 
 **Files:**
+- Create: `app/supabaseClient.js`
+- Create: `app/photos.js`
+- Create: `tests/photos.test.js`
 - Create: `supabase/migrations/20260528000000_photo_gallery.sql`
-- Create: `src/lib/supabase.ts`
-- Create: `src/lib/photos.ts`
-- Test: `src/lib/photos.test.ts`
 
-- [ ] **Step 1: Write failing API wrapper tests**
+- [ ] **Step 1: Write failing photo helper tests**
 
-```ts
-import { describe, expect, test, vi } from 'vitest';
-import { buildPhotoStoragePath, sortPhotosForGallery } from './photos';
+```js
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { buildPhotoStoragePath, sortPhotosForAdmin, sortPhotosForGallery } from '../app/photos.js';
 
-describe('photo API helpers', () => {
-  test('builds collision-resistant storage paths', () => {
-    const path = buildPhotoStoragePath('visitor_abc', 'image/jpeg');
-    expect(path).toMatch(/^uploads\/visitor_abc\/\d+-[a-z0-9-]+\.jpg$/);
-  });
+test('builds collision-resistant storage paths', () => {
+  const path = buildPhotoStoragePath('visitor_abc', 'image/jpeg');
+  assert.match(path, /^uploads\/visitor_abc\/\d+-[a-z0-9-]+\.jpg$/);
+});
 
-  test('sorts photos by newest first for gallery display', () => {
-    const photos = [
-      { id: 'old', created_at: '2026-01-01T00:00:00.000Z', recommendation_count: 3 },
-      { id: 'new', created_at: '2026-01-02T00:00:00.000Z', recommendation_count: 1 },
-    ];
-    expect(sortPhotosForGallery(photos as never)[0].id).toBe('new');
-  });
+test('sorts gallery photos newest first', () => {
+  const photos = [
+    { id: 'old', created_at: '2026-01-01T00:00:00.000Z', recommendation_count: 3 },
+    { id: 'new', created_at: '2026-01-02T00:00:00.000Z', recommendation_count: 1 },
+  ];
+  assert.equal(sortPhotosForGallery(photos)[0].id, 'new');
+});
+
+test('sorts admin photos by recommendations then upload time', () => {
+  const photos = [
+    { id: 'older-top', created_at: '2026-01-01T00:00:00.000Z', recommendation_count: 5 },
+    { id: 'newer-top', created_at: '2026-01-02T00:00:00.000Z', recommendation_count: 5 },
+    { id: 'low', created_at: '2026-01-03T00:00:00.000Z', recommendation_count: 1 },
+  ];
+  assert.deepEqual(sortPhotosForAdmin(photos).map((photo) => photo.id), ['newer-top', 'older-top', 'low']);
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- src/lib/photos.test.ts`
+Run: `node --test tests/photos.test.js`
 
-Expected: FAIL because `photos.ts` does not exist.
+Expected: FAIL because `app/photos.js` does not exist.
 
-- [ ] **Step 3: Implement schema and API wrapper**
+- [ ] **Step 3: Implement schema and photo API**
 
-Create tables, bucket, RLS policies, grants, `recommend_photo` RPC, and typed browser API helpers for list/upload/recommend/realtime.
+Create tables, bucket, RLS policies, grants, Realtime publication setup, private recommendation function, public RPC wrapper, Supabase client helper, and list/upload/recommend/realtime functions.
 
 - [ ] **Step 4: Run tests**
 
-Run: `npm test -- src/lib/photos.test.ts`
+Run: `node --test tests/photos.test.js`
 
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
-Run: `git add supabase src/lib && git commit -m "feat: add Supabase photo data layer"`
+Run: `git add app/supabaseClient.js app/photos.js tests/photos.test.js supabase/migrations && git commit -m "feat: add Supabase photo data layer"`
 
-### Task 5: Guest Upload and Gallery UI
+### Task 5: Guest Gallery UI
 
 **Files:**
-- Create: `src/components/UploadForm.tsx`
-- Create: `src/components/Gallery.tsx`
-- Create: `src/pages/HomePage.tsx`
-- Modify: `src/App.tsx`
-- Modify: `src/styles.css`
-- Test: `src/components/Gallery.test.tsx`
+- Create: `app/main.js`
+- Modify: `index.html`
+- Modify: `app/styles.css`
 
-- [ ] **Step 1: Write failing component tests**
+- [ ] **Step 1: Implement guest UI controller**
 
-```tsx
-import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
-import { Gallery } from './Gallery';
+Build nickname/photo upload, optimization feedback, responsive gallery rendering, recommendation buttons, realtime refresh, and Korean user-facing messages.
 
-describe('Gallery', () => {
-  test('shows upload metadata and disables already recommended photos', () => {
-    render(
-      <Gallery
-        photos={[{
-          id: 'p1',
-          nickname: 'Mina',
-          public_url: 'https://example.com/photo.jpg',
-          storage_path: 'uploads/a.jpg',
-          mime_type: 'image/jpeg',
-          file_size: 1000,
-          recommendation_count: 2,
-          created_at: '2026-05-28T10:00:00.000Z',
-        }]}
-        recommendedPhotoIds={['p1']}
-        remainingRecommendations={2}
-        onRecommend={vi.fn()}
-      />
-    );
-    expect(screen.getByText('Mina')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /recommended/i })).toBeDisabled();
-  });
-});
-```
+- [ ] **Step 2: Run tests**
 
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `npm test -- src/components/Gallery.test.tsx`
-
-Expected: FAIL because the component does not exist.
-
-- [ ] **Step 3: Implement guest UI**
-
-Build the upload form, responsive SNS-style gallery, recommendation buttons, live state updates, Korean UI copy, loading states, and error messages.
-
-- [ ] **Step 4: Run component test**
-
-Run: `npm test -- src/components/Gallery.test.tsx`
+Run: `node --test tests/*.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
-Run: `git add src && git commit -m "feat: build guest gallery experience"`
+Run: `git add index.html app/main.js app/styles.css && git commit -m "feat: build guest gallery"`
 
 ### Task 6: Admin Edge Function and Dashboard
 
 **Files:**
+- Create: `app/admin.js`
+- Modify: `admin/index.html`
+- Modify: `app/styles.css`
 - Create: `supabase/functions/admin-photos/index.ts`
-- Create: `src/pages/AdminPage.tsx`
-- Modify: `src/App.tsx`
-- Test: `src/pages/AdminPage.test.tsx`
 
-- [ ] **Step 1: Write failing admin UI test**
+- [ ] **Step 1: Implement admin function and dashboard**
 
-```tsx
-import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
-import { AdminPage } from './AdminPage';
+Build password validation in the Edge Function, admin list sorted by recommendation count, single delete, delete all, and realtime refresh after login.
 
-describe('AdminPage', () => {
-  test('starts with a password form', () => {
-    render(<AdminPage />);
-    expect(screen.getByLabelText('관리자 비밀번호')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '입장' })).toBeInTheDocument();
-  });
-});
-```
+- [ ] **Step 2: Run tests**
 
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `npm test -- src/pages/AdminPage.test.tsx`
-
-Expected: FAIL because the page does not exist.
-
-- [ ] **Step 3: Implement admin function and dashboard**
-
-Implement password validation in the Edge Function, admin photo list sorted by recommendation count, single delete, delete all, and realtime refresh.
-
-- [ ] **Step 4: Run admin test**
-
-Run: `npm test -- src/pages/AdminPage.test.tsx`
+Run: `node --test tests/*.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
-Run: `git add src/pages supabase/functions src/App.tsx && git commit -m "feat: add admin photo management"`
+Run: `git add admin app/admin.js app/styles.css supabase/functions && git commit -m "feat: add admin photo management"`
 
-### Task 7: Deployment Docs and Verification
+### Task 7: Deployment Docs and Static Verification
 
 **Files:**
+- Create: `scripts/verify-static.js`
 - Create: `.github/workflows/deploy.yml`
 - Create: `README.md`
 - Modify: `package.json`
 
-- [ ] **Step 1: Add deployment workflow and documentation**
+- [ ] **Step 1: Add static verification, deployment workflow, and documentation**
 
-Document environment variables, Supabase migration deploy, Edge Function secrets, Edge Function deploy, GitHub Pages workflow setup, and QR URL usage.
+Document Supabase migration deploy, Edge Function secrets, Edge Function deploy, GitHub Pages workflow setup, public configuration, and QR URL usage.
 
 - [ ] **Step 2: Run full verification**
 
-Run: `npm test`
+Run: `node --test tests/*.test.js`
 
 Expected: PASS.
 
-Run: `npm run build`
+Run: `node scripts/verify-static.js`
 
-Expected: PASS and `dist/` is generated.
+Expected: PASS with all required files present.
 
 - [ ] **Step 3: Commit**
 
-Run: `git add .github README.md package.json && git commit -m "docs: add deployment guide"`
+Run: `git add .github README.md package.json scripts && git commit -m "docs: add deployment guide"`

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>사진 공유 갤러리</title>
+    <link rel="stylesheet" href="./app/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="갤러리 소개">
+        <div>
+          <p class="eyebrow">Photo Gallery</p>
+          <h1>사진 공유 & 추천</h1>
+          <p class="intro">닉네임으로 사진을 올리고, 마음에 드는 사진 3장에 익명 추천을 남겨보세요.</p>
+        </div>
+        <a class="admin-link" href="./admin/">관리자</a>
+      </section>
+
+      <section class="upload-panel" aria-labelledby="upload-title">
+        <div>
+          <h2 id="upload-title">사진 업로드</h2>
+          <p class="muted">사진은 브라우저에서 5MB 이하로 최적화한 뒤 업로드됩니다.</p>
+        </div>
+        <form id="upload-form" class="upload-form">
+          <label>
+            <span>닉네임</span>
+            <input id="nickname" name="nickname" type="text" maxlength="40" autocomplete="name" required />
+          </label>
+          <label>
+            <span>사진</span>
+            <input id="photo-file" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
+          </label>
+          <button type="submit">업로드</button>
+        </form>
+        <p id="upload-status" class="status" role="status"></p>
+      </section>
+
+      <section class="gallery-section" aria-labelledby="gallery-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="gallery-title">실시간 갤러리</h2>
+            <p id="recommendation-status" class="muted">추천 가능 횟수: 3</p>
+          </div>
+          <button id="refresh-gallery" type="button" class="secondary-button">새로고침</button>
+        </div>
+        <div id="gallery" class="photo-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./app/main.js"></script>
+  </body>
+</html>

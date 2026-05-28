@@ -6,11 +6,11 @@ Build a QR/link-friendly web page where guests can choose a nickname, upload opt
 
 ## Deployment Model
 
-- Frontend: React/Vite static app deployed with GitHub Pages.
+- Frontend: dependency-light static HTML/CSS/ES Modules app deployed with GitHub Pages.
 - Backend services: Supabase Postgres, Storage, Realtime, and Edge Functions.
 - Public routes:
-  - `/`: guest upload and gallery experience.
-  - `/admin`: password-protected administrator dashboard.
+- `/`: guest upload and gallery experience.
+- `/admin/`: password-protected administrator dashboard.
 
 ## Guest Flow
 
@@ -33,7 +33,6 @@ The dashboard lists photos sorted by recommendation count descending, then uploa
 - `id uuid primary key`
 - `nickname text not null`
 - `storage_path text not null unique`
-- `public_url text not null`
 - `mime_type text not null`
 - `file_size integer not null`
 - `recommendation_count integer not null default 0`
@@ -55,7 +54,7 @@ The frontend uses only the Supabase public key. The service role key is used onl
 
 RLS is enabled on public tables. Anonymous users can read photos and insert photos. Anonymous users can call the recommendation RPC, but direct writes to `recommendations` are restricted so the three-recommendation limit cannot be bypassed from the browser. Admin delete operations happen only through Edge Functions after password validation.
 
-Storage uses a public bucket for photo display. Uploads are allowed through a constrained policy or an upload Edge Function; deletes are admin-only through Edge Functions. File type and size are validated on the client and should also be constrained by Supabase Storage policies where possible.
+Storage uses a public bucket for photo display. Uploads are allowed through a constrained policy; deletes are admin-only through Edge Functions. File type and size are validated on the client and constrained by Supabase Storage bucket settings where possible. Public display URLs are derived from the storage path instead of being trusted from user-provided database input.
 
 The migration explicitly grants required access to `anon` and `authenticated` roles because newly-created tables may not be automatically exposed to the Supabase Data API.
 

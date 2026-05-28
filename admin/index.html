@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>사진 갤러리 관리자</title>
+    <link rel="stylesheet" href="../app/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell admin-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Admin</p>
+          <h1>관리자 페이지</h1>
+          <p class="intro">추천 수 내림차순으로 업로드를 확인하고 삭제할 수 있습니다.</p>
+        </div>
+        <a class="admin-link" href="../">갤러리</a>
+      </section>
+
+      <section id="admin-login" class="upload-panel">
+        <h2>관리자 입장</h2>
+        <form id="admin-form" class="upload-form">
+          <label>
+            <span>관리자 비밀번호</span>
+            <input id="admin-password" type="password" autocomplete="current-password" required />
+          </label>
+          <button type="submit">입장</button>
+        </form>
+        <p id="admin-status" class="status" role="status"></p>
+      </section>
+
+      <section id="admin-dashboard" class="gallery-section hidden" aria-labelledby="admin-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="admin-title">업로드 내역</h2>
+            <p id="admin-count" class="muted">0개</p>
+          </div>
+          <div class="button-row">
+            <button id="admin-refresh" type="button" class="secondary-button">새로고침</button>
+            <button id="delete-all" type="button" class="danger-button">전체 삭제</button>
+          </div>
+        </div>
+        <div id="admin-list" class="admin-list" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script type="module" src="../app/admin.js"></script>
+  </body>
+</html>

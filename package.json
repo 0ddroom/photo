@@ -1,0 +1,10 @@
+{
+  "name": "photo-sharing-recommendation-gallery",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/run-tests.js",
+    "build": "node scripts/verify-static.js"
+  }
+}
