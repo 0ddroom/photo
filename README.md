@@ -29,7 +29,7 @@ supabase functions deploy admin-photos
 supabase secrets set ADMIN_PASSWORD="원하는-관리자-비밀번호"
 ```
 
-Supabase Edge Functions에는 보통 `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY`가 기본 제공됩니다. 프로젝트 설정에 따라 누락되어 있으면 함께 secret으로 설정하세요.
+Supabase Edge Functions에는 `SUPABASE_URL`과 secret key 묶음이 기본 제공될 수 있습니다. 함수는 기본 `SUPABASE_SECRET_KEYS`와 직접 설정한 `SUPABASE_SERVICE_ROLE_KEY`를 모두 지원합니다. 프로젝트에서 service role 또는 secret key를 직접 넣어야 한다면 아래처럼 추가하세요.
 
 ```bash
 supabase secrets set SUPABASE_URL="https://프로젝트.supabase.co"

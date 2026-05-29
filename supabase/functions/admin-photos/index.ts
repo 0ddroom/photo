@@ -9,7 +9,27 @@ const corsHeaders = {
 const bucketName = Deno.env.get('PHOTO_BUCKET') ?? 'event-photos';
 const adminPassword = Deno.env.get('ADMIN_PASSWORD') ?? '';
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+function readSupabaseSecretKey() {
+  const explicitKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (explicitKey) {
+    return explicitKey;
+  }
+
+  const secretKeys = Deno.env.get('SUPABASE_SECRET_KEYS');
+  if (!secretKeys) {
+    return '';
+  }
+
+  try {
+    const parsed = JSON.parse(secretKeys);
+    return parsed.service_role ?? parsed.secret ?? Object.values(parsed)[0] ?? '';
+  } catch {
+    return '';
+  }
+}
+
+const serviceRoleKey = readSupabaseSecretKey();
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
@@ -55,7 +75,7 @@ async function listPhotos() {
 
 async function deletePhoto(photoId: string | undefined) {
   if (!photoId) {
-    return jsonResponse({ error: 'photoId가 필요합니다.' }, 400);
+    return jsonResponse({ error: 'photoId is required.' }, 400);
   }
 
   const { data: photo, error: findError } = await supabase
@@ -65,7 +85,7 @@ async function deletePhoto(photoId: string | undefined) {
     .single();
 
   if (findError) {
-    return jsonResponse({ error: '사진을 찾을 수 없습니다.' }, 404);
+    return jsonResponse({ error: 'Photo was not found.' }, 404);
   }
 
   const { error: storageError } = await supabase.storage.from(bucketName).remove([photo.storage_path]);
@@ -120,14 +140,14 @@ Deno.serve(async (request) => {
   }
 
   if (request.method !== 'POST') {
-    return jsonResponse({ error: 'POST 요청만 지원합니다.' }, 405);
+    return jsonResponse({ error: 'Only POST requests are supported.' }, 405);
   }
 
   try {
     const body = await request.json();
 
     if (!requireAdminPassword(body.password)) {
-      return jsonResponse({ error: '관리자 비밀번호가 올바르지 않습니다.' }, 401);
+      return jsonResponse({ error: 'The admin password is incorrect.' }, 401);
     }
 
     if (body.action === 'list') {
@@ -142,9 +162,9 @@ Deno.serve(async (request) => {
       return deleteAllPhotos();
     }
 
-    return jsonResponse({ error: '지원하지 않는 관리자 작업입니다.' }, 400);
+    return jsonResponse({ error: 'Unsupported admin action.' }, 400);
   } catch (error) {
-    const message = error instanceof Error ? error.message : '관리자 작업 중 오류가 발생했습니다.';
+    const message = error instanceof Error ? error.message : 'An admin operation failed.';
     return jsonResponse({ error: message }, 500);
   }
 });
