@@ -38,7 +38,7 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY="service-role-key"
 
 ## GitHub Pages 배포
 
-1. GitHub 저장소 Settings에서 Pages 소스를 **GitHub Actions**로 설정합니다.
+1. GitHub 저장소 Settings에서 Pages 소스를 **GitHub Actions**로 설정합니다. 워크플로도 Pages 자동 활성화를 시도합니다.
 2. `app/config.js`에 공개 Supabase URL과 publishable/anon key가 들어 있는지 확인합니다.
 3. `main` 또는 `master` 브랜치에 푸시하면 `.github/workflows/deploy.yml`이 정적 사이트를 배포합니다.
 4. 배포된 Pages URL을 QR 코드에 연결합니다.
