@@ -39,19 +39,13 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY="service-role-key"
 ## GitHub Pages 배포
 
 1. GitHub 저장소 Settings에서 Pages 소스를 **GitHub Actions**로 설정합니다.
-2. 저장소 Settings → Secrets and variables → Actions → Variables에 아래 값을 추가합니다.
-
-```text
-SUPABASE_URL=https://프로젝트.supabase.co
-SUPABASE_ANON_KEY=public-anon-key
-```
-
+2. `app/config.js`에 공개 Supabase URL과 publishable/anon key가 들어 있는지 확인합니다.
 3. `main` 또는 `master` 브랜치에 푸시하면 `.github/workflows/deploy.yml`이 정적 사이트를 배포합니다.
 4. 배포된 Pages URL을 QR 코드에 연결합니다.
 
 ## 로컬 확인
 
-이 프로젝트는 빌드 도구 없이 정적 파일로 동작합니다. `app/config.js`의 공개 Supabase 값을 채운 뒤 `index.html`을 브라우저에서 열어 확인할 수 있습니다.
+이 프로젝트는 빌드 도구 없이 정적 파일로 동작합니다. `app/config.js`의 공개 Supabase 값을 채운 뒤 정적 서버나 GitHub Pages에서 확인할 수 있습니다.
 
 테스트와 정적 파일 검증:
 

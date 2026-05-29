@@ -1,6 +1,6 @@
 export const DEFAULT_CONFIG = {
-  supabaseUrl: 'https://YOUR-PROJECT.supabase.co',
-  supabaseAnonKey: 'YOUR_PUBLIC_ANON_KEY',
+  supabaseUrl: 'https://tsnnilpugmbzwxzuhqbt.supabase.co',
+  supabaseAnonKey: 'sb_publishable_fwHIDdqGsLuSBy76m7NLaQ__VnqjzeH',
   bucketName: 'event-photos',
   adminFunctionName: 'admin-photos',
   maxRecommendations: 3,
