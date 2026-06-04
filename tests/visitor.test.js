@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import {
   canRecommendMore,
+  forgetRecommendedPhoto,
   getOrCreateVisitorId,
   getRecommendedPhotoIds,
   rememberRecommendedPhoto,
+  remainingRecommendations,
 } from '../app/visitor.js';
 
 function memoryStorage() {
@@ -30,5 +32,16 @@ export default [
     rememberRecommendedPhoto('c', storage);
     assert.deepEqual(getRecommendedPhotoIds(storage), ['a', 'b', 'c']);
     assert.equal(canRecommendMore(storage), false);
+  }],
+  ['removes a recommendation and restores one available slot', () => {
+    const storage = memoryStorage();
+    rememberRecommendedPhoto('a', storage);
+    rememberRecommendedPhoto('b', storage);
+
+    forgetRecommendedPhoto('a', storage);
+
+    assert.deepEqual(getRecommendedPhotoIds(storage), ['b']);
+    assert.equal(remainingRecommendations(storage), 2);
+    assert.equal(canRecommendMore(storage), true);
   }],
 ];

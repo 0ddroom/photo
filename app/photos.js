@@ -107,6 +107,19 @@ export async function recommendPhoto(client, { photoId, visitorId }) {
   return data;
 }
 
+export async function cancelRecommendation(client, { photoId, visitorId }) {
+  const { data, error } = await client.rpc('cancel_recommendation', {
+    p_photo_id: photoId,
+    p_visitor_id: visitorId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export function subscribeToPhotoChanges(client, onChange) {
   const channel = client
     .channel('photo-gallery-photos')

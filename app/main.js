@@ -1,9 +1,16 @@
 import { getAppConfig } from './config.js';
 import { optimizeImage } from './imageOptimizer.js';
-import { listPhotos, recommendPhoto, subscribeToPhotoChanges, uploadPhoto } from './photos.js';
+import {
+  cancelRecommendation,
+  listPhotos,
+  recommendPhoto,
+  subscribeToPhotoChanges,
+  uploadPhoto,
+} from './photos.js';
 import { getSupabaseClient } from './supabaseClient.js';
 import {
   canRecommendMore,
+  forgetRecommendedPhoto,
   getOrCreateVisitorId,
   getRecommendedPhotoIds,
   rememberRecommendedPhoto,
@@ -12,9 +19,10 @@ import {
 import {
   formatRecommendationCount,
   formatUploadTime,
+  getCancelRecommendationMessage,
   getRecommendationButtonLabel,
   getRecommendationMessage,
-} from './ui.js?v=thumb-up-1';
+} from './ui.js?v=recommend-toggle-1';
 
 const elements = {
   form: document.querySelector('#upload-form'),
@@ -72,7 +80,7 @@ function renderGallery() {
   const remaining = remainingRecommendations();
   const cards = photos.map((photo) => {
     const alreadyRecommended = recommendedIds.has(photo.id);
-    const disabled = alreadyRecommended || remaining <= 0;
+    const disabled = !alreadyRecommended && remaining <= 0;
     const card = document.createElement('article');
     card.className = 'photo-card';
 
@@ -80,7 +88,7 @@ function renderGallery() {
     imageButton.type = 'button';
     imageButton.className = 'photo-image-button';
     imageButton.disabled = disabled;
-    imageButton.setAttribute('aria-label', `${photo.nickname}님의 사진 추천`);
+    imageButton.setAttribute('aria-label', `${photo.nickname}님의 사진 ${alreadyRecommended ? '추천 취소' : '추천'}`);
     imageButton.addEventListener('click', () => handleRecommend(photo));
 
     const image = document.createElement('img');
@@ -130,6 +138,30 @@ async function loadGallery({ quiet = false } = {}) {
 }
 
 async function handleRecommend(photo) {
+  const alreadyRecommended = getRecommendedPhotoIds().includes(photo.id);
+
+  if (alreadyRecommended) {
+    const result = await cancelRecommendation(client, { photoId: photo.id, visitorId });
+    const shouldClearLocalRecommendation = result?.ok || result?.reason === 'not_recommended';
+    setStatus(
+      elements.uploadStatus,
+      getCancelRecommendationMessage(result),
+      shouldClearLocalRecommendation ? 'success' : 'error',
+    );
+
+    if (shouldClearLocalRecommendation) {
+      forgetRecommendedPhoto(photo.id);
+      photos = photos.map((item) => (
+        item.id === photo.id && Number.isFinite(Number(result.recommendation_count))
+          ? { ...item, recommendation_count: result.recommendation_count }
+          : item
+      ));
+    }
+
+    renderGallery();
+    return;
+  }
+
   if (!canRecommendMore()) {
     setStatus(elements.uploadStatus, '추천은 한 사람당 3개까지 가능해요.', 'error');
     renderGallery();

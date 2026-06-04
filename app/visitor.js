@@ -49,6 +49,11 @@ export function rememberRecommendedPhoto(photoId, storage = defaultStorage()) {
   storage.setItem(RECOMMENDED_KEY, JSON.stringify([...uniqueIds].slice(0, MAX_RECOMMENDATIONS)));
 }
 
+export function forgetRecommendedPhoto(photoId, storage = defaultStorage()) {
+  const filteredIds = getRecommendedPhotoIds(storage).filter((id) => id !== photoId);
+  storage.setItem(RECOMMENDED_KEY, JSON.stringify(filteredIds));
+}
+
 export function canRecommendMore(storage = defaultStorage()) {
   return getRecommendedPhotoIds(storage).length < MAX_RECOMMENDATIONS;
 }

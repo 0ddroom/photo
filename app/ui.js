@@ -2,7 +2,7 @@ const THUMB_UP = '\u{1F44D}';
 
 export function getRecommendationButtonLabel({ alreadyRecommended, remaining }) {
   if (alreadyRecommended) {
-    return `${THUMB_UP} 추천 완료`;
+    return `${THUMB_UP} 추천 취소`;
   }
 
   if (remaining <= 0) {
@@ -29,6 +29,19 @@ export function getRecommendationMessage(result) {
   };
 
   return messages[result?.reason] ?? '추천을 저장하지 못했어요.';
+}
+
+export function getCancelRecommendationMessage(result) {
+  if (result?.ok) {
+    return '추천을 취소했어요.';
+  }
+
+  const messages = {
+    invalid_visitor: '추천 정보를 확인하지 못했어요. 새로고침 후 다시 시도해 주세요.',
+    not_recommended: '이미 취소된 추천이에요.',
+  };
+
+  return messages[result?.reason] ?? '추천을 취소하지 못했어요.';
 }
 
 export function formatUploadTime(value) {

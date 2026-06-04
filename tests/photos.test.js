@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
-import { buildPhotoStoragePath, sortPhotosForAdmin, sortPhotosForGallery } from '../app/photos.js';
+import {
+  buildPhotoStoragePath,
+  cancelRecommendation,
+  sortPhotosForAdmin,
+  sortPhotosForGallery,
+} from '../app/photos.js';
 
 export default [
   ['builds collision-resistant storage paths', () => {
@@ -20,5 +25,25 @@ export default [
       { id: 'low', created_at: '2026-01-03T00:00:00.000Z', recommendation_count: 1 },
     ];
     assert.deepEqual(sortPhotosForAdmin(photos).map((photo) => photo.id), ['newer-top', 'older-top', 'low']);
+  }],
+  ['calls the cancel recommendation RPC with photo and visitor ids', async () => {
+    const calls = [];
+    const client = {
+      rpc(name, args) {
+        calls.push({ name, args });
+        return { data: { ok: true, recommendation_count: 2 }, error: null };
+      },
+    };
+
+    const result = await cancelRecommendation(client, { photoId: 'photo-1', visitorId: 'visitor-1' });
+
+    assert.deepEqual(calls, [{
+      name: 'cancel_recommendation',
+      args: {
+        p_photo_id: 'photo-1',
+        p_visitor_id: 'visitor-1',
+      },
+    }]);
+    assert.equal(result.recommendation_count, 2);
   }],
 ];
