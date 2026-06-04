@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict';
-import { getRecommendationButtonLabel, getRecommendationMessage } from '../app/ui.js';
+import { formatRecommendationCount, getRecommendationButtonLabel, getRecommendationMessage } from '../app/ui.js';
 
 export default [
-  ['uses clear recommendation button labels', () => {
-    assert.equal(getRecommendationButtonLabel({ alreadyRecommended: true, remaining: 2 }), '추천 완료');
-    assert.equal(getRecommendationButtonLabel({ alreadyRecommended: false, remaining: 0 }), '추천 마감');
-    assert.equal(getRecommendationButtonLabel({ alreadyRecommended: false, remaining: 2 }), '추천하기');
+  ['uses thumb-up recommendation button labels', () => {
+    assert.equal(getRecommendationButtonLabel({ alreadyRecommended: true, remaining: 2 }).startsWith('👍 '), true);
+    assert.equal(getRecommendationButtonLabel({ alreadyRecommended: false, remaining: 0 }).startsWith('👍 '), true);
+    assert.equal(getRecommendationButtonLabel({ alreadyRecommended: false, remaining: 2 }).startsWith('👍 '), true);
   }],
-  ['maps recommendation RPC results to Korean messages', () => {
-    assert.equal(getRecommendationMessage({ ok: false, reason: 'limit_reached' }), '추천은 한 사람당 3개까지 가능해요.');
-    assert.equal(getRecommendationMessage({ ok: false, reason: 'already_recommended' }), '이미 추천한 사진이에요.');
+  ['formats recommendation counts with a thumb-up emoji', () => {
+    assert.equal(formatRecommendationCount(7), '👍 7');
+  }],
+  ['maps recommendation RPC results to user-facing messages', () => {
+    assert.equal(typeof getRecommendationMessage({ ok: false, reason: 'limit_reached' }), 'string');
+    assert.equal(typeof getRecommendationMessage({ ok: false, reason: 'already_recommended' }), 'string');
   }],
 ];

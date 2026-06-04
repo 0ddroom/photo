@@ -303,7 +303,7 @@ input:focus {
 }
 
 .recommend-count {
-  min-width: 48px;
+  min-width: 66px;
   height: 48px;
   border-radius: 8px;
   background: #fff4d6;
@@ -311,6 +311,8 @@ input:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
   font-weight: 900;
 }
 

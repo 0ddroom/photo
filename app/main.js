@@ -9,7 +9,12 @@ import {
   rememberRecommendedPhoto,
   remainingRecommendations,
 } from './visitor.js';
-import { formatUploadTime, getRecommendationButtonLabel, getRecommendationMessage } from './ui.js';
+import {
+  formatRecommendationCount,
+  formatUploadTime,
+  getRecommendationButtonLabel,
+  getRecommendationMessage,
+} from './ui.js?v=thumb-up-1';
 
 const elements = {
   form: document.querySelector('#upload-form'),
@@ -96,7 +101,7 @@ function renderGallery() {
 
     const recommendRow = document.createElement('div');
     recommendRow.className = 'recommend-row';
-    recommendRow.append(createTextElement('span', 'recommend-count', String(photo.recommendation_count ?? 0)));
+    recommendRow.append(createTextElement('span', 'recommend-count', formatRecommendationCount(photo.recommendation_count)));
 
     const recommendButton = document.createElement('button');
     recommendButton.type = 'button';

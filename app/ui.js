@@ -1,13 +1,19 @@
+const THUMB_UP = '\u{1F44D}';
+
 export function getRecommendationButtonLabel({ alreadyRecommended, remaining }) {
   if (alreadyRecommended) {
-    return '추천 완료';
+    return `${THUMB_UP} 추천 완료`;
   }
 
   if (remaining <= 0) {
-    return '추천 마감';
+    return `${THUMB_UP} 추천 마감`;
   }
 
-  return '추천하기';
+  return `${THUMB_UP} 추천하기`;
+}
+
+export function formatRecommendationCount(count) {
+  return `${THUMB_UP} ${Number(count ?? 0)}`;
 }
 
 export function getRecommendationMessage(result) {
